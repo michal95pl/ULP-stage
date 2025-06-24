@@ -5,7 +5,7 @@
         "board/esp32s3-builtin.cfg"
     ],
     "idf.toolsPathWin": "C:\\Users\\micha\\.espressif",
-    "idf.portWin": "COM4",
+    "idf.portWin": "COM3",
     "idf.flashType": "JTAG",
     "files.associations": {
         "pcb_management.h": "c",
@@ -34,6 +34,10 @@
         "span": "c",
         "spi_master.h": "c",
         "gpio.h": "c",
-        "status_app.h": "c"
+        "status_app.h": "c",
+        "status_json_app.h": "c"
+    },
+    "idf.customExtraVars": {
+        "IDF_TARGET": "esp32s3"
     }
 }

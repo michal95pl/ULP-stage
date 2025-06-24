@@ -92,32 +92,28 @@ void receive_spi_data(uint8_t data[], uint16_t length)
     t.tx_buffer = NULL;
 
     while (gpio_get_level(GPIO_BUSY_STM) == 1) {
+        printf("Waiting for STM32 to be ready...\n");
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 
     spi_device_transmit(spi_handle, &t);
 
-    printf("Received data: ");
-    for (uint16_t i = 0; i < length; i++)
-    {
-        printf("%d", rx_buf[i]);
-    }
-    printf("\n");
-
     memcpy(data, rx_buf, length);
 }
 
-void receive_spi_stm32_data(uint8_t command[], uint16_t command_length)
+uint16_t receive_spi_stm32_data(uint8_t command[], uint16_t command_length, uint8_t data_rcv[])
 {
     send_spi_stm32_data(command, command_length); // send command to stm32
     
     uint8_t length[2];
     receive_spi_data(length, 2); // receive length of data
     uint16_t data_length = (length[0] << 8) | length[1];
-
+    
+    // // special command to get data
     uint8_t command_get[] = {'S', 'G', 'D'};
     send_spi_stm32_data(command_get, 3); // send command in order to get data
+    
+    receive_spi_data(data_rcv, data_length); // receive data
 
-    uint8_t data[data_length];
-    receive_spi_data(data, data_length); // receive data
+    return data_length;
 }

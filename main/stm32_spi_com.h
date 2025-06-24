@@ -11,6 +11,6 @@
 
     esp_err_t init_spi_stm32();
     esp_err_t send_spi_stm32_data(uint8_t data[], uint16_t length);
-    void receive_spi_stm32_data(uint8_t command[], uint16_t command_length);
+    uint16_t receive_spi_stm32_data(uint8_t command[], uint16_t command_length, uint8_t data_rcv[]);
 
 #endif

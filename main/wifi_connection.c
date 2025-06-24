@@ -76,6 +76,7 @@ uint8_t keepCount = 3;
 
 uint8_t client_connected = 0;
 uint8_t status_json[250];
+uint8_t rx_spi_buffor[400];
 
 static void tcp_server_task(void * pvParameters)
 {
@@ -151,7 +152,7 @@ static void tcp_server_task(void * pvParameters)
                 {
                     len_rcv = convert_2byte_utf_to_1byte(rx_buffer, rx_buffer_converted, len_rcv);
 
-                    debug_print_buffor(rx_buffer_converted, len_rcv);
+                    // debug_print_buffor(rx_buffer_converted, len_rcv);
                     
                     if (rx_buffer_converted[0] == 'W')
                     {
@@ -162,18 +163,32 @@ static void tcp_server_task(void * pvParameters)
                     }
 
                     // ack
-                    uint8_t test_send[] = {'W', 'C', 'A', 0x03};
+                    uint8_t test_send[] = {'W', 'A', 'C', 0x03};
                     int16_t err_send = send(client_sock, test_send, sizeof(test_send), 0);
                     if (err_send < 0) {
                         log_error("Error occurred during sending");
                         break;
                     }
                     
-                    if (rx_buffer_converted[0] == 'R' && rx_buffer_converted[1] == 'T' && rx_buffer_converted[2] == 'S')
+                    if (rx_buffer_converted[0] == 'R' && rx_buffer_converted[1] == 'S' && rx_buffer_converted[2] == 'T')
                     {
-                        uint16_t len_status = get_json_status(status_json);
-                        debug_print_buffor(status_json, len_status);
-                        send(client_sock, status_json, len_status, 0);
+                        // fromat json
+                        uint16_t len_status = receive_spi_stm32_data(rx_buffer_converted, len_rcv, rx_spi_buffor);
+                        memmove(rx_spi_buffor + 4, rx_spi_buffor, len_status);
+                        rx_spi_buffor[0] = 'W';
+                        rx_spi_buffor[1] = 'S';
+                        rx_spi_buffor[2] = 'T';
+                        rx_spi_buffor[3] = '{';
+                        len_status += 4;
+                        rx_spi_buffor[len_status++] = ',';
+
+                        uint16_t len = get_json_status(status_json);
+                        memmove(rx_spi_buffor + len_status, status_json, len);
+                        len_status += len;
+                        rx_spi_buffor[len_status++] = '}';
+                        rx_spi_buffor[len_status++] = 0x03;
+
+                        send(client_sock, rx_spi_buffor, len_status, 0);
                     }
                 }
             }
